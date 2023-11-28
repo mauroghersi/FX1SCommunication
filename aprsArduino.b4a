@@ -1,0 +1,136 @@
+﻿Build1=Default,b4a.example
+File1=Layout.bal
+File2=Untitled-15-1024x576.png
+FileGroup1=Default Group
+FileGroup2=Default Group
+Group=Default Group
+Library1=core
+Library2=felusbserial
+Library3=usb
+Library4=xui
+Library5=byteconverter
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="14" android:targetSdkVersion="30"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~CreateResourceFromFile(Macro, Themes.LightTheme)~\n~'End of default text.~\n~
+Module1=Starter
+NumberOfFiles=2
+NumberOfLibraries=5
+NumberOfModules=1
+Version=12.5
+@EndOfDesignText@
+#Region  Project Attributes 
+	#ApplicationLabel: FX1S Communication
+	#VersionCode: 1
+	#VersionName: 
+	'SupportedOrientations possible values: unspecified, landscape or portrait.
+	#SupportedOrientations: unspecified
+	#CanInstallToExternalStorage: False
+#End Region
+
+#Region  Activity Attributes 
+	#FullScreen: False
+	#IncludeTitle: True
+#End Region
+
+Sub Process_Globals
+	'These global variables will be declared once when the application starts.
+	'These variables can be accessed from all modules.
+	Private xui As XUI
+	Private usbserial As felUsbSerial
+	Private manager As UsbManager
+	'Private btconv As ByteConverter
+End Sub
+
+Sub Globals
+	'These global variables will be redeclared each time the activity is created.
+	Private Button1 As Button
+	Private EditText1 As EditText
+	Private EditText2 As EditText
+	Private Label1 As Label
+	Private Button2 As Button
+	Private Button3 As Button
+	Private Label2 As Label
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	If FirstTime Then
+		manager.Initialize
+	End If
+	Activity.LoadLayout("Layout")
+	EditText1.Color = Colors.Black
+	EditText2.Color = Colors.Black
+End Sub
+
+Sub Activity_Resume
+	
+
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+
+End Sub
+
+Sub Button1_Click
+	If manager.GetDevices.Length = 0 Then
+		xui.MsgboxAsync("Dispositivos USB nao encontrados.", "Erro")
+	Else
+		Dim device As UsbDevice = manager.GetDevices(0) 
+		If manager.HasPermission(device) = False Then
+			Label1.Text = "Click to Connect"
+			ToastMessageShow("Connect and Click Again.", True)
+			manager.RequestPermission(device)
+		Else
+			usbserial.Initialize("serial", device, -1)
+			usbserial.BaudRate = 9600
+			usbserial.DataBits = usbserial.DATA_BITS_7
+			usbserial.Parity = usbserial.PARITY_EVEN
+			usbserial.StopBits = usbserial.STOP_BITS_1
+			usbserial.StartReading
+			Label1.Text = "Connected"
+		End If
+	End If
+End Sub
+
+Private Sub serial_DataAvailable (Buffer() As Byte)		'bytes received
+
+	If Buffer.Length > 1 Then
+		Dim rxValue As String
+		rxValue = BytesToString(Buffer,0, Buffer.Length, "UTF8")
+		EditText1.Text = rxValue
+		
+		If rxValue.Contains("01") Then
+			Label2.Color = Colors.Green
+		End If
+				
+	End If
+	
+End Sub
+
+Private Sub Button2_Click
+	Try	
+		'usbserial.Write(Array As Byte(0x05))
+		usbserial.Write(Array As Byte(0x02, 0x30, 0x30, 0x30, 0x38, 0x30, 0x30, 0x31, 0x03, 0x35, 0x43))
+	Catch
+		ToastMessageShow("No Device", True)
+	End Try
+		
+End Sub
+
+Private Sub Button3_Click
+	Try
+		Dim msg() As Byte
+		'msg = btconv.StringToBytes(EditText2.Text, "UTF8")
+		msg = Array As Byte(05)
+		usbserial.Write(Array As Byte(0x02, 0x30, 0x31, 0x30, 0x30, 0x30, 0x30, 0x32, 0x03, 0x35, 0x36))
+		'usbserial.Write(msg)
+	Catch
+		ToastMessageShow("No Device", True)
+	End Try
+	
+End Sub
+
+Private Sub Button4_Click
+	
+End Sub
+
+Private Sub btnBck_Click
+	
+End Sub
